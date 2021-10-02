@@ -1,4 +1,4 @@
-package exporter
+package main
 
 import (
 	"context"
@@ -9,9 +9,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
 
-	"github.com/danopstech/starlink_exporter/pkg/spacex.com/api/device"
+	"github.com/dev-mull/starlink_exporter/pkg/spacex.com/api/device"
 )
 
 const (
@@ -201,19 +202,42 @@ var (
 // Exporter collects Starlink stats from the Dish and exports them using
 // the prometheus metrics package.
 type Exporter struct {
-	Conn        *grpc.ClientConn
+	Address     string
+	conn        *grpc.ClientConn
 	Client      device.DeviceClient
 	DishID      string
 	CountryCode string
 }
 
 // New returns an initialized Exporter.
-func New(address string) (*Exporter, error) {
+func NewExporter(address string) (*Exporter, error) {
+	e := &Exporter{
+		Address: address,
+	}
+	return e, e.Conn()
+}
+
+func (e *Exporter) Close() {
+	if e.conn != nil {
+	}
+}
+
+func (e *Exporter) GetState() connectivity.State {
+	if e.conn != nil {
+		return e.conn.GetState()
+	}
+	return 1
+}
+
+func (e *Exporter) Conn() error {
+	if e.conn != nil {
+		return nil
+	}
 	ctx, connCancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer connCancel()
-	conn, err := grpc.DialContext(ctx, address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, e.Address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		return nil, fmt.Errorf("error creating underlying gRPC connection to starlink dish: %s", err.Error())
+		return fmt.Errorf("error creating underlying gRPC connection to starlink dish: %s", err.Error())
 	}
 
 	ctx, HandleCancel := context.WithTimeout(context.Background(), time.Second*1)
@@ -222,15 +246,13 @@ func New(address string) (*Exporter, error) {
 		Request: &device.Request_GetDeviceInfo{},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("could not collect inital information from dish: %s", err.Error())
+		return fmt.Errorf("could not collect inital information from dish: %s", err.Error())
 	}
-
-	return &Exporter{
-		Conn:        conn,
-		Client:      device.NewDeviceClient(conn),
-		DishID:      resp.GetGetDeviceInfo().GetDeviceInfo().GetId(),
-		CountryCode: resp.GetGetDeviceInfo().GetDeviceInfo().GetCountryCode(),
-	}, nil
+	e.conn = conn
+	e.Client = device.NewDeviceClient(conn)
+	e.DishID = resp.GetGetDeviceInfo().GetDeviceInfo().GetId()
+	e.CountryCode = resp.GetGetDeviceInfo().GetDeviceInfo().GetCountryCode()
+	return nil
 }
 
 // Describe describes all the metrics ever exported by the Starlink exporter. It
@@ -282,6 +304,10 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the stats from Starlink dish and delivers them
 // as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
+	if err := e.Conn(); err != nil {
+		log.Error(err)
+		return
+	}
 	start := time.Now()
 
 	ok := e.collectDishContext(ch)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/danopstech/starlink_exporter/internal/exporter"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -17,14 +16,14 @@ const (
 
 func main() {
 	port := flag.String("port", "9817", "listening port to expose metrics on")
-	address := flag.String("address", exporter.DishAddress, "IP address and port to reach dish")
+	address := flag.String("address", DishAddress, "IP address and port to reach dish")
 	flag.Parse()
 
-	exporter, err := exporter.New(*address)
+	exporter, err := NewExporter(*address)
 	if err != nil {
-		log.Fatalf("could not start exporter: %s", err.Error())
+		log.Warnf("could not talk to dishy: %s", err.Error())
 	}
-	defer exporter.Conn.Close()
+	defer exporter.Close()
 	log.Infof("dish id: %s", exporter.DishID)
 
 	r := prometheus.NewRegistry()
@@ -42,7 +41,12 @@ func main() {
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		switch exporter.Conn.GetState() {
+		if err := exporter.Conn(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "%s\n", err)
+			return
+		}
+		switch exporter.GetState() {
 		case 0, 2:
 			// Idle or Ready
 			w.WriteHeader(http.StatusOK)
@@ -53,7 +57,7 @@ func main() {
 			// Shutdown
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		_, _ = fmt.Fprintf(w, "%s\n", exporter.Conn.GetState())
+		_, _ = fmt.Fprintf(w, "%s\n", exporter.GetState())
 	})
 
 	http.Handle(metricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))

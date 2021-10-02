@@ -1,4 +1,4 @@
-module github.com/danopstech/starlink_exporter
+module github.com/dev-mull/starlink_exporter
 
 go 1.16
 
