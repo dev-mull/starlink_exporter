@@ -12,14 +12,24 @@ import (
 
 const (
 	metricsPath = "/metrics"
+
+	// DishAddress to reach Starlink dish ip:port
+	DishAddress = "192.168.100.1:9200"
 )
 
+var (
+	listen, address string
+)
+
+func init() {
+	flag.StringVar(&listen, "listen", ":9817", "listening port to expose metrics on")
+	flag.StringVar(&address, "address", DishAddress, "IP address and port to reach dish")
+}
+
 func main() {
-	port := flag.String("port", "9817", "listening port to expose metrics on")
-	address := flag.String("address", DishAddress, "IP address and port to reach dish")
 	flag.Parse()
 
-	exporter, err := NewExporter(*address)
+	exporter, err := NewExporter(address)
 	if err != nil {
 		log.Warnf("could not talk to dishy: %s", err.Error())
 	}
@@ -41,25 +51,25 @@ func main() {
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if err := exporter.Conn(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "%s\n", err)
-			return
-		}
-		switch exporter.GetState() {
+		state := exporter.GetState()
+		var statusCode int
+		switch state {
 		case 0, 2:
 			// Idle or Ready
-			w.WriteHeader(http.StatusOK)
+			statusCode = http.StatusOK
 		case 1, 3:
 			// Connecting or TransientFailure
-			w.WriteHeader(http.StatusServiceUnavailable)
+			statusCode = http.StatusServiceUnavailable
 		case 4:
 			// Shutdown
-			w.WriteHeader(http.StatusInternalServerError)
+			statusCode = http.StatusInternalServerError
 		}
-		_, _ = fmt.Fprintf(w, "%s\n", exporter.GetState())
+		log.Infof("code: %d, state: %d", statusCode, state)
+		w.WriteHeader(statusCode)
+		_, _ = fmt.Fprintf(w, "%s\n", state)
 	})
 
 	http.Handle(metricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	log.Infof("listening on %s", listen)
+	log.Fatal(http.ListenAndServe(listen, nil))
 }

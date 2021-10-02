@@ -6,9 +6,7 @@
 ---
 A [Starlink](https://www.starlink.com/) exporter for Prometheus. Not affiliated with or acting on behalf of Starlink(™)
 
-[![goreleaser](https://github.com/dev-mull/starlink_exporter/actions/workflows/release.yaml/badge.svg)](https://github.com/dev-mull/starlink_exporter/actions/workflows/release.yaml)
 [![build](https://github.com/dev-mull/starlink_exporter/actions/workflows/build.yml/badge.svg)](https://github.com/dev-mull/starlink_exporter/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/dev-mull/starlink_exporter)](/LICENSE)
 [![Release](https://img.shields.io/github/release/dev-mull/starlink_exporter.svg)](https://github.com/dev-mull/starlink_exporter/releases/latest)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/dev-mull/starlink_exporter)
 ![os/arch](https://img.shields.io/badge/os%2Farch-amd64-yellow)
