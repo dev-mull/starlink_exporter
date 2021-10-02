@@ -14,8 +14,6 @@ A [Starlink](https://www.starlink.com/) exporter for Prometheus. Not affiliated 
 ![os/arch](https://img.shields.io/badge/os%2Farch-armv7-yellow)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dev-mull/starlink_exporter)](https://goreportcard.com/report/github.com/dev-mull/starlink_exporter)
 
-If you would like a pre-packaged system to monitor you Starlink system please check out https://github.com/dev-mull/starlink. It includes this exporter, speedtest_exporter, blackbox_exporter, Grafana and Prometheus in one Docker Compose file.
-
 ## Usage:
 
 ### Flags
@@ -23,13 +21,12 @@ If you would like a pre-packaged system to monitor you Starlink system please ch
 `starlink_exporter` is configured through the use of optional command line flags
 
 ```bash
-$ ./starlink_exporter --help
-Usage of starlink_exporter
-  -address string
-        IP address and port to reach dish (default "192.168.100.1:9200")
-  -port string
-        listening port to expose metrics on (default "9817")
-
+$ ./starlink_exporter --help                                                                                                        SIGINT(2) ↵  3381  13:34:57
+Usage of ./starlink_exporter:
+  -dish-address string
+    	IP address and port to reach dish (default "192.168.100.1:9200")
+  -listen string
+    	listening port to expose metrics on (default ":9817")
 ```
 
 ### Binaries
@@ -38,19 +35,6 @@ For pre-built binaries please take a look at the [releases](https://github.com/d
 
 ```bash
 ./starlink_exporter [flags]
-```
-
-### Docker
-
-Docker Images can be found at [GitHub Container Registry](https://github.com/orgs/dev-mull/packages/container/package/starlink_exporter) & [Dockerhub](https://hub.docker.com/r/dev-mull/starlink_exporter).
-
-Example:
-```bash
-docker pull ghcr.io/dev-mull/starlink_exporter:latest
-
-docker run \
-  -p 9817:9817 \
-  ghcr.io/dev-mull/starlink_exporter:latest [flags]
 ```
 
 ### Setup Prometheus to scrape `starlink_exporter`

@@ -1,0 +1,10 @@
+[Unit]
+Description=Starlink Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/starlink_exporter
+
+[Install]
+WantedBy=multi-user.target

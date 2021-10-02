@@ -23,7 +23,7 @@ var (
 
 func init() {
 	flag.StringVar(&listen, "listen", ":9817", "listening port to expose metrics on")
-	flag.StringVar(&address, "address", DishAddress, "IP address and port to reach dish")
+	flag.StringVar(&address, "dish-address", DishAddress, "IP address and port to reach dish")
 }
 
 func main() {
