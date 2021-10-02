@@ -246,7 +246,7 @@ func (e *Exporter) Conn() error {
 		Request: &device.Request_GetDeviceInfo{},
 	})
 	if err != nil {
-		return fmt.Errorf("could not collect inital information from dish: %s", err.Error())
+		return fmt.Errorf("could not collect initial information from dish: %s", err.Error())
 	}
 	e.conn = conn
 	e.Client = device.NewDeviceClient(conn)
