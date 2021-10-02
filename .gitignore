@@ -1,4 +1,5 @@
 proto/
 dist/
+.build/
 make.sh
 .idea/
