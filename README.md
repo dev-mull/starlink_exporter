@@ -16,6 +16,9 @@ A [Starlink](https://www.starlink.com/) exporter for Prometheus. Not affiliated 
 
 ## Usage:
 
+### Build
+```make clean && make build```
+
 ### Flags
 
 `starlink_exporter` is configured through the use of optional command line flags
