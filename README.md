@@ -17,6 +17,10 @@ A [Starlink](https://www.starlink.com/) exporter for Prometheus. Not affiliated 
 ## Usage:
 
 ### Build
+NOTE: https://github.com/fullstorydev/grpcurl is required
+```go install https://github.com/fullstorydev/grpcurl```
+
+
 ```make clean && make build```
 
 ### Flags
